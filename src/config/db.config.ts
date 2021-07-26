@@ -1,5 +1,13 @@
 import { createConnection } from "typeorm";
-import { Merchant, User } from "../entities";
+import {
+  Cart,
+  Menu,
+  MenuItem,
+  Merchant,
+  MerchantCategory,
+  Order,
+  User,
+} from "../entities";
 
 export const connect = () =>
   createConnection({
@@ -9,7 +17,7 @@ export const connect = () =>
     username: "postgres",
     password: "postgres",
     database: "new-bungkus",
-    entities: [User, Merchant],
+    entities: [User, Merchant, MerchantCategory, Menu, MenuItem, Order, Cart],
     synchronize: true,
     logging: false,
   });

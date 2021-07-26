@@ -9,7 +9,7 @@ export interface GetMerchantParams {
   skip?: number;
 }
 
-export class CreateMerchant {
+export class CreateMerchantPayload {
   name: string;
   description?: string;
   address: string;
@@ -23,4 +23,4 @@ export class CreateMerchant {
   bannerImageUrl?: string;
 }
 
-export class UpdateMerchant extends CreateMerchant {}
+export class UpdateMerchantPayload extends CreateMerchantPayload {}

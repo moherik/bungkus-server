@@ -1,5 +1,9 @@
 import express from "express";
-import { apiResponse, CreateMerchant, UpdateMerchant } from "../dto";
+import {
+  apiResponse,
+  CreateMerchantPayload,
+  UpdateMerchantPayload,
+} from "../dto";
 import { verifyToken } from "../middleware";
 import { MerchantService } from "../services";
 import { logger } from "../utils";
@@ -34,7 +38,7 @@ merchantRoute.get("/:id", async (req, res, _next) => {
 });
 
 merchantRoute.post("/", verifyToken, async (req, res, _next) => {
-  const body = req.body as CreateMerchant;
+  const body = req.body as CreateMerchantPayload;
   try {
     const merchant = await service.create({
       userId: Number(req.userId),
@@ -52,7 +56,7 @@ merchantRoute.post("/", verifyToken, async (req, res, _next) => {
 
 merchantRoute.patch("/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
-  const body = req.body as UpdateMerchant;
+  const body = req.body as UpdateMerchantPayload;
   try {
     const merchant = await service.update({
       userId: Number(req.userId),

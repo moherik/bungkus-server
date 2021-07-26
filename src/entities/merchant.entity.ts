@@ -4,7 +4,10 @@ import {
   Entity,
   Index,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
@@ -16,6 +19,8 @@ import {
   Transform,
   TransformationType,
 } from "class-transformer";
+import { Menu } from "./menu.entity";
+import { Order } from "./order.entity";
 
 @Entity()
 export class Merchant {
@@ -62,6 +67,9 @@ export class Merchant {
   @Expose({ name: "banner_image_url" })
   bannerImageUrl?: string;
 
+  @Column({ name: "is_active", type: "boolean", default: true })
+  isActive?: boolean;
+
   @CreateDateColumn({ name: "created_at" })
   @Exclude()
   createdAt: Date;
@@ -70,7 +78,28 @@ export class Merchant {
   @Exclude()
   updatedAt: Date;
 
+  @ManyToMany(() => MerchantCategory, { onDelete: "CASCADE" })
+  @JoinTable({
+    name: "merchant_has_categories",
+  })
+  categories: MerchantCategory[];
+
   @ManyToOne(() => User, (user) => user.merchants, { nullable: false })
   @JoinColumn({ name: "user_id" })
   user: User;
+
+  @OneToMany(() => Menu, (menu) => menu.merchant, { onDelete: "CASCADE" })
+  menus: Menu[];
+
+  @OneToMany(() => Order, (order) => order.merchant, { onDelete: "CASCADE" })
+  orders: Order[];
+}
+
+@Entity({ name: "merchant_category" })
+export class MerchantCategory {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
+  name: string;
 }

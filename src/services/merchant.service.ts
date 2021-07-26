@@ -1,6 +1,6 @@
 import { classToPlain, plainToClass } from "class-transformer";
 import { getRepository, ILike } from "typeorm";
-import { CreateMerchant, UpdateMerchant } from "../dto";
+import { CreateMerchantPayload, UpdateMerchantPayload } from "../dto";
 import { GetMerchantParams } from "../dto/merchant.dto";
 import { Merchant, User } from "../entities";
 import { UserService } from "./user.service";
@@ -59,12 +59,25 @@ export class MerchantService {
     return classToPlain(merchant);
   }
 
+  async getByUserId({
+    merchantId,
+    userId,
+  }: {
+    merchantId: number;
+    userId: number;
+  }) {
+    return merchantRepo().findOneOrFail({
+      id: merchantId,
+      user: { id: userId },
+    });
+  }
+
   async create({
     userId,
     payload,
   }: {
     userId: number;
-    payload: CreateMerchant;
+    payload: CreateMerchantPayload;
   }) {
     const user = await userService.getByIdOrFail(userId);
     const merchant = plainToClass(Merchant, payload);
@@ -79,7 +92,7 @@ export class MerchantService {
   }: {
     userId: number;
     merchantId: number;
-    payload: UpdateMerchant;
+    payload: UpdateMerchantPayload;
   }) {
     const merchant = await merchantRepo().findOneOrFail({
       id: merchantId,

@@ -8,7 +8,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { Menu } from "./menu.entity";
 import { Merchant } from "./merchant.entity";
+import { Order } from "./order.entity";
 
 @Entity()
 @Exclude()
@@ -45,6 +47,13 @@ export class User {
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
 
-  @OneToMany(() => Merchant, (merchant) => merchant.user)
+  @OneToMany(() => Merchant, (merchant) => merchant.user, {
+    onDelete: "CASCADE",
+  })
   merchants: Merchant[];
+
+  @OneToMany(() => Order, (order) => order.user, {
+    onDelete: "CASCADE",
+  })
+  orders: Order[];
 }

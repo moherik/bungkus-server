@@ -1,5 +1,13 @@
 export { SignInPayload } from "./user.dto";
-export { CreateMerchant, UpdateMerchant } from "./merchant.dto";
+export { CreateMerchantPayload, UpdateMerchantPayload } from "./merchant.dto";
+export {
+  CreateMenuPayload,
+  CreateMenuItemPayload,
+  MenuVariants,
+  UpdateMenuPayload,
+  UpdateMenuItemPayload,
+} from "./menu.dto";
+export { OrderType } from "./order.dto";
 export { JWTPayload } from "./jwt.dto";
 
 export interface ApiResponse {
