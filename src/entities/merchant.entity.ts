@@ -13,12 +13,7 @@ import {
 } from "typeorm";
 import { Point } from "geojson";
 import { User } from "./user.entity";
-import {
-  Exclude,
-  Expose,
-  Transform,
-  TransformationType,
-} from "class-transformer";
+import { Exclude, Transform, TransformationType } from "class-transformer";
 import { Menu } from "./menu.entity";
 import { Order } from "./order.entity";
 
@@ -60,11 +55,10 @@ export class Merchant {
   distance: number;
 
   @Column({ name: "image_url", nullable: true })
-  @Expose({ name: "image_url" })
   imageUrl?: string;
 
   @Column({ name: "banner_image_url", nullable: true })
-  @Expose({ name: "banner_image_url" })
+  @Exclude()
   bannerImageUrl?: string;
 
   @Column({ name: "is_active", type: "boolean", default: true })

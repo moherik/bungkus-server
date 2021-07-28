@@ -1,4 +1,4 @@
-import { Expose, Transform } from "class-transformer";
+import { Expose } from "class-transformer";
 
 export interface GetMerchantParams {
   lat?: number;
@@ -7,6 +7,7 @@ export interface GetMerchantParams {
   keyword?: string;
   take?: number;
   skip?: number;
+  categories?: string;
 }
 
 export class CreateMerchantPayload {
@@ -15,11 +16,8 @@ export class CreateMerchantPayload {
   address: string;
   location: { lat: number; long: number };
   open: { day: string; time: string }[];
-
-  @Expose({ name: "image_url" })
+  categoryIds: number[];
   imageUrl?: string;
-
-  @Expose({ name: "banner_image_url" })
   bannerImageUrl?: string;
 }
 

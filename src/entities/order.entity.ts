@@ -10,6 +10,7 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 import { MenuVariants, OrderType } from "../dto";
+import { OrderStatus } from "../dto/order.dto";
 import { MenuItem } from "./menu.entity";
 import { Merchant } from "./merchant.entity";
 import { User } from "./user.entity";
@@ -21,6 +22,9 @@ export class Order {
 
   @Column({ type: "enum", enum: OrderType, default: OrderType.PICKUP })
   type?: OrderType;
+
+  @Column({ type: "enum", enum: OrderStatus, default: OrderStatus.PENDING })
+  status?: OrderStatus;
 
   @Column({ nullable: true })
   note: string;

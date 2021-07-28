@@ -12,7 +12,7 @@ const merchantRoute = express.Router();
 const service = new MerchantService();
 
 merchantRoute.get("/", verifyToken, async (req, res, _next) => {
-  const { lat, long, distance, take, skip, keyword } = req.query;
+  const { lat, long, distance, take, skip, keyword, categories } = req.query;
   try {
     const merchant = await service.getAll({
       lat: Number(lat),
@@ -21,9 +21,11 @@ merchantRoute.get("/", verifyToken, async (req, res, _next) => {
       keyword: keyword?.toString() || "",
       take: Number(take || 10),
       skip: Number(skip || 0),
+      categories: categories?.toString() || "",
     });
     res.json(apiResponse({ code: 200, data: merchant }));
   } catch (error) {
+    console.log(error);
     logger.error(
       `Fetch all data with query: ${req.query} with error: ${error}`
     );
@@ -49,6 +51,8 @@ merchantRoute.post("/", verifyToken, async (req, res, _next) => {
       apiResponse({ code: 200, data: { id: merchant.id, message: "Success" } })
     );
   } catch (error) {
+    console.log(error);
+
     logger.error(`Perform create merchant with error: ${error}`);
     res.status(400).json(apiResponse({ code: 400, data: "Error" }));
   }

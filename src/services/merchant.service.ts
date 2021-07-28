@@ -1,11 +1,12 @@
 import { classToPlain, plainToClass } from "class-transformer";
-import { getRepository, ILike } from "typeorm";
+import { getRepository } from "typeorm";
 import { CreateMerchantPayload, UpdateMerchantPayload } from "../dto";
 import { GetMerchantParams } from "../dto/merchant.dto";
-import { Merchant, User } from "../entities";
+import { Merchant, MerchantCategory } from "../entities";
 import { UserService } from "./user.service";
 
 const merchantRepo = () => getRepository(Merchant);
+const categoryRepo = () => getRepository(MerchantCategory);
 const userService = new UserService();
 
 export class MerchantService {
@@ -16,35 +17,56 @@ export class MerchantService {
     take,
     skip,
     keyword,
+    categories,
   }: GetMerchantParams) {
-    let results: [Merchant[], number];
+    const categoryIds = categories ? categories?.split(",") : [];
 
+    let results: [Merchant[], number];
     if (lat && long) {
       results = await merchantRepo()
         .createQueryBuilder("m")
+        .leftJoinAndSelect("m.categories", "c")
+        .leftJoin("m.categories", "cp")
         .addSelect(
           "CAST(ST_Distance(ST_SetSRID(ST_MakePoint(:lat, :long), 4326)::geography, location::geography) AS INTEGER)",
           "m_distance"
         )
         .where(
-          "ST_DWithin(location::geography, ST_SetSRID(ST_MakePoint(:lat, :long)::geography, 4326), :distance)"
+          "ST_DWithin(location::geography, ST_SetSRID(ST_MakePoint(:lat, :long)::geography, 4326), :distance)",
+          {
+            lat,
+            long,
+            distance,
+          }
         )
-        .where("m.name ilike :name", { name: `%${keyword}%` })
-        .orderBy("m_distance", "ASC")
-        .setParameters({
-          lat,
-          long,
-          distance,
+        .where("m.name ILIKE :keyword", { keyword: `%${keyword}%` })
+        .where((qb) => {
+          if (categoryIds.length > 0) {
+            qb.where("cp.id IN (:...categoryIds)", {
+              categoryIds,
+            });
+          }
         })
+        .orderBy("m_distance", "ASC")
         .take(take)
         .skip(skip)
         .getManyAndCount();
     } else {
-      results = await merchantRepo().findAndCount({
-        where: { name: ILike(`%${keyword}%`) },
-        take: take,
-        skip: skip,
-      });
+      results = await merchantRepo()
+        .createQueryBuilder("m")
+        .leftJoinAndSelect("m.categories", "c")
+        .leftJoin("m.categories", "cp")
+        .where("m.name ILIKE :keyword", { keyword: `%${keyword || ""}%` })
+        .where((qb) => {
+          if (categoryIds.length > 0) {
+            qb.where("cp.id IN (:...categoryIds)", {
+              categoryIds,
+            });
+          }
+        })
+        .take(take)
+        .skip(skip)
+        .getManyAndCount();
     }
 
     const merchants = classToPlain(results[0]);
@@ -79,9 +101,11 @@ export class MerchantService {
     userId: number;
     payload: CreateMerchantPayload;
   }) {
-    const user = await userService.getByIdOrFail(userId);
     const merchant = plainToClass(Merchant, payload);
+    const user = await userService.getByIdOrFail(userId);
     merchant.user = user;
+    const categories = await categoryRepo().findByIds(payload.categoryIds);
+    merchant.categories = categories;
     return await merchantRepo().save(merchant);
   }
 
@@ -94,13 +118,15 @@ export class MerchantService {
     merchantId: number;
     payload: UpdateMerchantPayload;
   }) {
-    const merchant = await merchantRepo().findOneOrFail({
+    const merchant = plainToClass(Merchant, payload);
+    const _merchant = await merchantRepo().findOneOrFail({
       id: merchantId,
       user: { id: userId },
     });
-    const merchantObj = plainToClass(Merchant, payload);
-    merchantObj.id = merchant.id;
-    return await merchantRepo().save(merchantObj);
+    merchant.id = _merchant.id;
+    const categories = await categoryRepo().findByIds(payload.categoryIds);
+    merchant.categories = categories;
+    return await merchantRepo().save(merchant);
   }
 
   async delete({ userId, merchantId }: { userId: number; merchantId: number }) {
