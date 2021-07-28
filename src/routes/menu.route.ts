@@ -35,7 +35,10 @@ menuRoute.get(
 // Get menu by menuId params
 menuRoute.get("/:menuId", verifyToken, async (req, res, _next) => {
   const { menuId } = req.params;
-  const menu = await service.getMenuById(Number(menuId));
+  const menu = await service.getMenuById({
+    menuId: Number(menuId),
+    plain: true,
+  });
   res.json(apiResponse({ code: 200, data: menu }));
 });
 

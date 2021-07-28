@@ -47,7 +47,10 @@ export class Order {
   @JoinColumn({ name: "user_id" })
   user: User;
 
-  @OneToMany(() => Cart, (cart) => cart.order, { onDelete: "SET NULL" })
+  @OneToMany(() => Cart, (cart) => cart.order, {
+    cascade: true,
+    onDelete: "SET NULL",
+  })
   carts: Cart[];
 }
 

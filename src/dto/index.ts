@@ -7,7 +7,12 @@ export {
   UpdateMenuPayload,
   UpdateMenuItemPayload,
 } from "./menu.dto";
-export { OrderType } from "./order.dto";
+export {
+  OrderType,
+  OrderStatus,
+  CreateOrderItemPayload,
+  CreateOrderPayload,
+} from "./order.dto";
 export { JWTPayload } from "./jwt.dto";
 
 export interface ApiResponse {

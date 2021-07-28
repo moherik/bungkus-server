@@ -10,7 +10,7 @@ const userRepo = () => getRepository(User);
 export class AuthService {
   async signIn(payload: SignInPayload) {
     const user = await userRepo().findOne({
-      where: { token: payload.token },
+      where: { token: payload.token, phone: payload.phone },
     });
 
     let newUser;
@@ -29,6 +29,7 @@ export class AuthService {
 
     return {
       userId: newUser.id,
+      name: newUser.name || null,
       jwtToken: token,
     };
   }

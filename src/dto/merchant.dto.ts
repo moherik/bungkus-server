@@ -1,6 +1,7 @@
 import { Expose } from "class-transformer";
 
 export interface GetMerchantParams {
+  userId: number;
   lat?: number;
   long?: number;
   distance?: number;

@@ -21,7 +21,7 @@ export interface CreateOrderPayload {
 }
 
 export interface CreateOrderItemPayload {
-  menuId: string;
+  menuItemId: string;
   menuName: string;
   variants: MenuVariants[];
   specialInstruction?: string;

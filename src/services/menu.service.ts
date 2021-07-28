@@ -17,7 +17,7 @@ const merchantService = new MerchantService();
 
 export class MenuService {
   async getAllMenu(merchantId: number) {
-    const menus = menuRepo().find({
+    const menus = await menuRepo().find({
       where: { merchant: { id: merchantId } },
       relations: ["items"],
       order: { order: "ASC" },
@@ -25,12 +25,30 @@ export class MenuService {
     return classToPlain(menus);
   }
 
-  async getMenuById(menuId: number) {
-    const menu = menuRepo().findOne(
+  async getMenuById({
+    menuId,
+    plain = false,
+  }: {
+    menuId: number;
+    plain?: boolean;
+  }) {
+    const menu = await menuRepo().findOne(
       { id: menuId },
       { relations: ["items"], order: { order: "ASC" } }
     );
-    return classToPlain(menu);
+    if (plain) {
+      return classToPlain(menu);
+    }
+    return menu;
+  }
+
+  async getMenuItemById({
+    menuItemId,
+  }: {
+    menuItemId: number;
+    plain?: boolean;
+  }) {
+    return await menuItemRepo().findOne({ id: menuItemId });
   }
 
   async createMenu({

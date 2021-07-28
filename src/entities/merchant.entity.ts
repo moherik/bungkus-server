@@ -13,7 +13,12 @@ import {
 } from "typeorm";
 import { Point } from "geojson";
 import { User } from "./user.entity";
-import { Exclude, Transform, TransformationType } from "class-transformer";
+import {
+  Exclude,
+  Expose,
+  Transform,
+  TransformationType,
+} from "class-transformer";
 import { Menu } from "./menu.entity";
 import { Order } from "./order.entity";
 
@@ -74,7 +79,15 @@ export class Merchant {
 
   @ManyToMany(() => MerchantCategory, { onDelete: "CASCADE" })
   @JoinTable({
-    name: "merchant_has_categories",
+    name: "merchant_categories",
+    joinColumn: {
+      name: "merchant_id",
+      referencedColumnName: "id",
+    },
+    inverseJoinColumn: {
+      name: "category_id",
+      referencedColumnName: "id",
+    },
   })
   categories: MerchantCategory[];
 
@@ -87,6 +100,11 @@ export class Merchant {
 
   @OneToMany(() => Order, (order) => order.merchant, { onDelete: "CASCADE" })
   orders: Order[];
+
+  @ManyToMany(() => User, (user) => user.favorites, { cascade: true })
+  userFav: User[];
+
+  isFav: string;
 }
 
 @Entity({ name: "merchant_category" })

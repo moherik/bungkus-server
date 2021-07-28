@@ -1,5 +1,5 @@
 import { classToPlain, plainToClass } from "class-transformer";
-import { getRepository } from "typeorm";
+import { getRepository, Not, SelectQueryBuilder } from "typeorm";
 import { CreateMerchantPayload, UpdateMerchantPayload } from "../dto";
 import { GetMerchantParams } from "../dto/merchant.dto";
 import { Merchant, MerchantCategory } from "../entities";
@@ -11,6 +11,7 @@ const userService = new UserService();
 
 export class MerchantService {
   async getAll({
+    userId,
     lat,
     long,
     distance,
@@ -32,12 +33,7 @@ export class MerchantService {
           "m_distance"
         )
         .where(
-          "ST_DWithin(location::geography, ST_SetSRID(ST_MakePoint(:lat, :long)::geography, 4326), :distance)",
-          {
-            lat,
-            long,
-            distance,
-          }
+          "ST_DWithin(location::geography, ST_SetSRID(ST_MakePoint(:lat, :long)::geography, 4326), :distance)"
         )
         .where("m.name ILIKE :keyword", { keyword: `%${keyword}%` })
         .where((qb) => {
@@ -47,10 +43,17 @@ export class MerchantService {
             });
           }
         })
+        .setParameters({
+          lat,
+          long,
+          distance,
+        })
         .orderBy("m_distance", "ASC")
         .take(take)
         .skip(skip)
         .getManyAndCount();
+
+      console.log(results);
     } else {
       results = await merchantRepo()
         .createQueryBuilder("m")
@@ -77,8 +80,25 @@ export class MerchantService {
   }
 
   async getById(id: number) {
-    const merchant = merchantRepo().findOne({ id });
+    const merchant = await merchantRepo().findOne({ id });
     return classToPlain(merchant);
+  }
+
+  async getByIdOrFail(id: number) {
+    return await merchantRepo().findOneOrFail({ id });
+  }
+
+  async getNotOwnMerchant({
+    userId,
+    merchantId,
+  }: {
+    userId: number;
+    merchantId: number;
+  }) {
+    return await merchantRepo().findOneOrFail({
+      id: merchantId,
+      user: { id: Not(userId) },
+    });
   }
 
   async getByUserId({
@@ -124,8 +144,10 @@ export class MerchantService {
       user: { id: userId },
     });
     merchant.id = _merchant.id;
-    const categories = await categoryRepo().findByIds(payload.categoryIds);
-    merchant.categories = categories;
+    if (payload.categoryIds && payload.categoryIds.length > 0) {
+      const categories = await categoryRepo().findByIds(payload.categoryIds);
+      merchant.categories = categories;
+    }
     return await merchantRepo().save(merchant);
   }
 
@@ -135,5 +157,32 @@ export class MerchantService {
       user: { id: userId },
     });
     if (merchant) return await merchantRepo().delete({ id: merchantId });
+  }
+
+  async addToFavorite({
+    userId,
+    merchantId,
+  }: {
+    userId: number;
+    merchantId: number;
+  }) {
+    const merchant = await merchantRepo().findOneOrFail({
+      where: { id: merchantId },
+      relations: ["userFav"],
+    });
+    const user = await userService.getByIdOrFail(userId);
+    const isFav = await merchantRepo()
+      .createQueryBuilder("merchant")
+      .leftJoin("merchant.userFav", "user")
+      .where("merchant.id = :merchantId", { merchantId })
+      .andWhere("user.id = :userId", { userId })
+      .getCount();
+
+    if (!isFav) {
+      merchant.userFav = [user, ...merchant.userFav];
+    } else {
+      merchant.userFav = merchant.userFav.filter((user) => user.id !== userId);
+    }
+    await merchantRepo().save(merchant);
   }
 }
