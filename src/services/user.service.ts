@@ -1,7 +1,8 @@
-import { getRepository } from "typeorm";
-import { User } from "../entities";
+import { getRepository, In } from "typeorm";
+import { Merchant, User } from "../entities";
 
 const repository = () => getRepository(User);
+const merchantRepo = () => getRepository(Merchant);
 
 export class UserService {
   async getById({
@@ -29,6 +30,7 @@ export class UserService {
       .createQueryBuilder("user")
       .loadRelationCountAndMap("user.totalFollowing", "user.following")
       .loadRelationCountAndMap("user.totalFollowers", "user.followers")
+      .loadAllRelationIds({ relations: ["favorites"] })
       .where("user.id = :userId", { userId })
       .getOne();
   }
@@ -63,6 +65,7 @@ export class UserService {
       relations: ["following", "followers"],
     });
     const followUser = await repository().findOneOrFail({ id: followUserId });
+
     const isFollowing = await repository()
       .createQueryBuilder("user")
       .leftJoin("user.following", "f")
@@ -78,6 +81,43 @@ export class UserService {
       );
     }
 
+    await repository().save(user);
+  }
+
+  async favorites({ userId }: { userId: number }) {
+    const user = await repository()
+      .createQueryBuilder("user")
+      .loadAllRelationIds({ relations: ["favorites"] })
+      .where("user.id = :userId", { userId })
+      .getOneOrFail();
+
+    return await merchantRepo().find({ where: { id: In(user.favorites) } });
+  }
+
+  async addToFavorite({
+    userId,
+    merchantId,
+  }: {
+    userId: number;
+    merchantId: number;
+  }) {
+    const user = await repository().findOneOrFail(userId, {
+      relations: ["favorites"],
+    });
+    const merchant = await merchantRepo().findOneOrFail(merchantId);
+
+    const isFav = await repository()
+      .createQueryBuilder("user")
+      .leftJoin("user.favorites", "fav")
+      .where("user.id = :userId", { userId })
+      .andWhere("fav.id = :merchantId", { merchantId })
+      .getCount();
+
+    if (!isFav) {
+      user.favorites = [merchant, ...user.favorites];
+    } else {
+      user.favorites = user.favorites.filter((fav) => fav.id !== merchantId);
+    }
     await repository().save(user);
   }
 }

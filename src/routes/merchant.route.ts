@@ -40,26 +40,6 @@ merchantRoute.get("/:id", async (req, res, _next) => {
   res.json(apiResponse({ code: 200, data: merchant }));
 });
 
-merchantRoute.post(
-  "/:merchantId/favorites",
-  verifyToken,
-  async (req, res, _next) => {
-    const { merchantId } = req.params;
-    try {
-      await service.addToFavorite({
-        userId: Number(req.userId),
-        merchantId: Number(merchantId),
-      });
-      res.json(apiResponse({ code: 200, data: "Success" }));
-    } catch (error) {
-      logger.error(
-        `Perform add favorite to merchantId: ${merchantId} with userId: ${req.userId} with error: ${error}`
-      );
-      res.status(400).json(apiResponse({ code: 400, data: "Error" }));
-    }
-  }
-);
-
 merchantRoute.post("/", verifyToken, async (req, res, _next) => {
   const body = req.body as CreateMerchantPayload;
   try {

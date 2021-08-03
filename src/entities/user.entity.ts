@@ -82,7 +82,7 @@ export class User extends BaseEntity {
   @Expose()
   totalFollowers: number;
 
-  @ManyToMany(() => Merchant, (merchant) => merchant.userFav)
+  @ManyToMany(() => Merchant)
   @JoinTable({
     name: "merchant_favorites",
     joinColumn: { name: "user_id", referencedColumnName: "id" },
@@ -91,5 +91,6 @@ export class User extends BaseEntity {
       referencedColumnName: "id",
     },
   })
+  @Expose()
   favorites: Merchant[];
 }

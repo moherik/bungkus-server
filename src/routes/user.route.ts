@@ -13,6 +13,11 @@ userRoute.get("/me", verifyToken, async (req, res, _next) => {
   res.json(apiResponse({ code: 200, data: classToPlain(user) }));
 });
 
+userRoute.get("/favorites", verifyToken, async (req, res, _next) => {
+  const merchants = await service.favorites({ userId: Number(req.userId) });
+  res.json(apiResponse({ code: 200, data: classToPlain(merchants) }));
+});
+
 userRoute.get("/:targetUserId", verifyToken, async (req, res, _next) => {
   const { targetUserId } = req.params;
   try {
@@ -50,5 +55,25 @@ userRoute.post("/follows/:userId", verifyToken, async (req, res, _next) => {
     res.status(400).json(apiResponse({ code: 400, data: "Error" }));
   }
 });
+
+userRoute.post(
+  "/favorites/:merchantId",
+  verifyToken,
+  async (req, res, _next) => {
+    const { merchantId } = req.params;
+    try {
+      await service.addToFavorite({
+        userId: Number(req.userId),
+        merchantId: Number(merchantId),
+      });
+      res.json(apiResponse({ code: 200, data: "Success" }));
+    } catch (error) {
+      logger.error(
+        `Perform add favorite to merchantId: ${merchantId} with userId: ${req.userId} with error: ${error}`
+      );
+      res.status(400).json(apiResponse({ code: 400, data: "Error" }));
+    }
+  }
+);
 
 export { userRoute };

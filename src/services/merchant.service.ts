@@ -158,31 +158,4 @@ export class MerchantService {
     });
     if (merchant) return await merchantRepo().delete({ id: merchantId });
   }
-
-  async addToFavorite({
-    userId,
-    merchantId,
-  }: {
-    userId: number;
-    merchantId: number;
-  }) {
-    const merchant = await merchantRepo().findOneOrFail({
-      where: { id: merchantId },
-      relations: ["userFav"],
-    });
-    const user = await userService.getByIdOrFail(userId);
-    const isFav = await merchantRepo()
-      .createQueryBuilder("merchant")
-      .leftJoin("merchant.userFav", "user")
-      .where("merchant.id = :merchantId", { merchantId })
-      .andWhere("user.id = :userId", { userId })
-      .getCount();
-
-    if (!isFav) {
-      merchant.userFav = [user, ...merchant.userFav];
-    } else {
-      merchant.userFav = merchant.userFav.filter((user) => user.id !== userId);
-    }
-    await merchantRepo().save(merchant);
-  }
 }

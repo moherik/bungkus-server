@@ -100,11 +100,6 @@ export class Merchant {
 
   @OneToMany(() => Order, (order) => order.merchant, { onDelete: "CASCADE" })
   orders: Order[];
-
-  @ManyToMany(() => User, (user) => user.favorites, { cascade: true })
-  userFav: User[];
-
-  isFav: string;
 }
 
 @Entity({ name: "merchant_category" })
