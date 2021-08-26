@@ -57,9 +57,7 @@ export class User extends BaseEntity {
   })
   merchants: Merchant[];
 
-  @OneToMany(() => Order, (order) => order.user, {
-    onDelete: "CASCADE",
-  })
+  @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
 
   @ManyToMany(() => User, (user) => user.following, { cascade: true })
@@ -73,7 +71,7 @@ export class User extends BaseEntity {
   })
   followers: User[];
 
-  @ManyToMany(() => User, (user) => user.followers)
+  @ManyToMany(() => User, (user) => user.followers, { onDelete: "CASCADE" })
   following: User[];
 
   @Expose()

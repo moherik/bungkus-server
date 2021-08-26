@@ -14,7 +14,7 @@ export const verifyToken = (
   const token = bearer?.split(" ")[1];
 
   if (!token) {
-    logger.warn(`Error attempt to login without header token`);
+    logger.error(`Error attempt to login without header token`);
     return res
       .status(403)
       .send(apiResponse({ code: 403, errors: "No token provided!" }));
@@ -22,7 +22,7 @@ export const verifyToken = (
 
   jwt.verify(token, JWT_SECRET, (err, decoded) => {
     if (err) {
-      logger.warn(`Unauthorized perform with token: ${token}`);
+      logger.error(`Unauthorized perform with token: ${token}`);
       return res
         .status(401)
         .send(apiResponse({ code: 401, errors: "Unauthorized" }));

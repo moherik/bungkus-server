@@ -91,7 +91,10 @@ export class Merchant {
   })
   categories: MerchantCategory[];
 
-  @ManyToOne(() => User, (user) => user.merchants, { nullable: false })
+  @ManyToOne(() => User, (user) => user.merchants, {
+    nullable: false,
+    onDelete: "CASCADE",
+  })
   @JoinColumn({ name: "user_id" })
   user: User;
 

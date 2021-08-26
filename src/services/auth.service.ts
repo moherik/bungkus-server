@@ -1,23 +1,23 @@
-import { getRepository } from "typeorm";
 import jwt from "jsonwebtoken";
+import { getRepository } from "typeorm";
 
 import { User } from "../entities";
 import { SignInPayload } from "../dto";
 import { JWT_SECRET } from "../config";
 
-const userRepo = () => getRepository(User);
-
 export class AuthService {
+  userRepo = () => getRepository(User);
+
   async signIn(payload: SignInPayload) {
-    const user = await userRepo().findOne({
-      where: { token: payload.token, phone: payload.phone },
+    const user = await this.userRepo().findOne({
+      where: { phone: payload.phone },
     });
 
     let newUser;
     if (!user) {
-      newUser = await userRepo().save(payload);
+      newUser = await this.userRepo().save(payload);
     } else {
-      newUser = await userRepo().save({
+      newUser = await this.userRepo().save({
         ...user,
         token: payload.token,
         tokenUpdatedAt: new Date(),
@@ -35,6 +35,6 @@ export class AuthService {
   }
 
   async get() {
-    return userRepo().find();
+    return this.userRepo().find();
   }
 }

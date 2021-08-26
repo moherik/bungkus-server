@@ -38,7 +38,9 @@ export class Menu {
   @Exclude()
   updatedAt: Date;
 
-  @ManyToOne(() => Merchant, (merchant) => merchant.menus)
+  @ManyToOne(() => Merchant, (merchant) => merchant.menus, {
+    onDelete: "CASCADE",
+  })
   @JoinColumn({ name: "merchant_id" })
   merchant: Merchant;
 }
