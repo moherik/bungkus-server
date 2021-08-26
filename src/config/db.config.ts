@@ -1,5 +1,12 @@
 import { createConnection } from "typeorm";
 import {
+  DB_HOST,
+  DB_PORT,
+  DB_USERNAME,
+  DB_PASSWORD,
+  DB_DATABASE,
+} from "../constants";
+import {
   Cart,
   Menu,
   MenuItem,
@@ -12,11 +19,11 @@ import {
 export const connect = () =>
   createConnection({
     type: "postgres",
-    host: "localhost",
-    port: 5432,
-    username: "postgres",
-    password: "postgres",
-    database: "new-bungkus",
+    host: DB_HOST,
+    port: DB_PORT,
+    username: DB_USERNAME,
+    password: DB_PASSWORD,
+    database: DB_DATABASE,
     entities: [User, Merchant, MerchantCategory, Menu, MenuItem, Order, Cart],
     synchronize: true,
     logging: false,

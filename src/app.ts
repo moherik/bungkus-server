@@ -1,5 +1,8 @@
 import "reflect-metadata";
+import dotenv from "dotenv";
 import express from "express";
+
+dotenv.config();
 
 import { router } from "./routes";
 import { PORT } from "./constants";
