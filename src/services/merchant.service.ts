@@ -85,7 +85,7 @@ export class MerchantService {
   }
 
   async getByIdOrFail(id: number) {
-    return await merchantRepo().findOneOrFail({ id });
+    return merchantRepo().findOneOrFail({ id });
   }
 
   async getNotOwnMerchant({
@@ -95,7 +95,7 @@ export class MerchantService {
     userId: number;
     merchantId: number;
   }) {
-    return await merchantRepo().findOneOrFail({
+    return merchantRepo().findOneOrFail({
       id: merchantId,
       user: { id: Not(userId) },
     });
@@ -126,7 +126,7 @@ export class MerchantService {
     merchant.user = user;
     const categories = await categoryRepo().findByIds(payload.categoryIds);
     merchant.categories = categories;
-    return await merchantRepo().save(merchant);
+    return merchantRepo().save(merchant);
   }
 
   async update({
@@ -148,7 +148,7 @@ export class MerchantService {
       const categories = await categoryRepo().findByIds(payload.categoryIds);
       merchant.categories = categories;
     }
-    return await merchantRepo().save(merchant);
+    return merchantRepo().save(merchant);
   }
 
   async delete({ userId, merchantId }: { userId: number; merchantId: number }) {
@@ -156,6 +156,6 @@ export class MerchantService {
       id: merchantId,
       user: { id: userId },
     });
-    if (merchant) return await merchantRepo().delete({ id: merchantId });
+    if (merchant) return merchantRepo().delete({ id: merchantId });
   }
 }
