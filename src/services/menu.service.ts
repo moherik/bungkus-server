@@ -48,7 +48,7 @@ export class MenuService {
     menuItemId: number;
     plain?: boolean;
   }) {
-    return await menuItemRepo().findOne({ id: menuItemId });
+    return menuItemRepo().findOne({ id: menuItemId });
   }
 
   async createMenu({
@@ -66,7 +66,7 @@ export class MenuService {
     });
     const menu = plainToClass(Menu, payload);
     menu.merchant = merchant;
-    return await menuRepo().save(menu);
+    return menuRepo().save(menu);
   }
 
   async createMenuItem({
@@ -90,7 +90,7 @@ export class MenuService {
     });
     const menuItem = plainToClass(MenuItem, payload);
     menuItem.menu = menu;
-    return await menuItemRepo().save(menuItem);
+    return menuItemRepo().save(menuItem);
   }
 
   async updateMenu({
@@ -111,7 +111,7 @@ export class MenuService {
     const menu = plainToClass(Menu, payload);
     menu.id = menuId;
     menu.merchant = merchant;
-    return await menuRepo().save(menu);
+    return menuRepo().save(menu);
   }
 
   async reorderMenu({
@@ -130,9 +130,9 @@ export class MenuService {
       merchantId,
     });
     if (type === "menu") {
-      return await menuRepo().save(payload);
+      return menuRepo().save(payload);
     } else if (type === "item") {
-      return await menuItemRepo().save(payload);
+      return menuItemRepo().save(payload);
     }
   }
 
@@ -161,7 +161,7 @@ export class MenuService {
     const menuItem = plainToClass(MenuItem, payload);
     menuItem.menu = menu;
     menuItem.id = menuItemId;
-    return await menuItemRepo().save(menuItem);
+    return menuItemRepo().save(menuItem);
   }
 
   async reorderMenuItem({
@@ -177,7 +177,7 @@ export class MenuService {
       userId,
       merchantId,
     });
-    return await menuItemRepo().save(payload);
+    return menuItemRepo().save(payload);
   }
 
   async deleteMenu({
@@ -197,7 +197,7 @@ export class MenuService {
       id: menuId,
       merchant: { id: merchantId },
     });
-    return await menuRepo().delete({
+    return menuRepo().delete({
       id: menuId,
       merchant: { id: merchantId },
     });
@@ -222,7 +222,7 @@ export class MenuService {
       id: menuItemId,
       menu: { id: menuId, merchant: { id: merchantId } },
     });
-    return await menuItemRepo().delete({
+    return menuItemRepo().delete({
       id: menuItemId,
       menu: { id: menuId, merchant: { id: merchantId } },
     });
