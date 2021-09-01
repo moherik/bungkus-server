@@ -13,7 +13,7 @@ export class UserService {
     targetUserId: number;
   }) {
     await repository().findOneOrFail({ id: userId });
-    return await repository()
+    return repository()
       .createQueryBuilder("user")
       .loadRelationCountAndMap("user.totalFollowing", "user.following")
       .loadRelationCountAndMap("user.totalFollowers", "user.followers")
@@ -22,11 +22,11 @@ export class UserService {
   }
 
   async getByIdOrFail(id: number) {
-    return await repository().findOneOrFail({ id });
+    return repository().findOneOrFail({ id });
   }
 
   async me(userId: number) {
-    return await repository()
+    return repository()
       .createQueryBuilder("user")
       .loadRelationCountAndMap("user.totalFollowing", "user.following")
       .loadRelationCountAndMap("user.totalFollowers", "user.followers")
@@ -38,7 +38,7 @@ export class UserService {
   async updateName({ userId, name }: { userId: number; name: string }) {
     const user = await repository().findOneOrFail({ id: userId });
     user.name = name;
-    return await repository().save(user);
+    return repository().save(user);
   }
 
   async updateAvatar({
@@ -50,7 +50,7 @@ export class UserService {
   }) {
     const user = await repository().findOneOrFail({ id: userId });
     user.avatarUrl = imageUrl;
-    return await repository().save(user);
+    return repository().save(user);
   }
 
   async followUser({
@@ -91,7 +91,7 @@ export class UserService {
       .where("user.id = :userId", { userId })
       .getOneOrFail();
 
-    return await merchantRepo().find({ where: { id: In(user.favorites) } });
+    return merchantRepo().find({ where: { id: In(user.favorites) } });
   }
 
   async addToFavorite({

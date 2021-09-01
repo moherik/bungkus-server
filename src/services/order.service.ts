@@ -97,7 +97,7 @@ export class OrderService {
     order.user = user;
     order.merchant = merchant;
     order.carts = carts;
-    return await repository().save(order);
+    return repository().save(order);
   }
 
   async updateStatus({
@@ -120,6 +120,6 @@ export class OrderService {
       merchant: { id: merchant.id },
     });
     order.status = status;
-    return await repository().save(order);
+    return repository().save(order);
   }
 }
