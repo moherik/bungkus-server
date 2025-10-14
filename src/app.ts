@@ -6,9 +6,9 @@ dotenv.config();
 
 import { router } from "./routes";
 import { PORT } from "./constants";
-import { connect } from "./config";
+import { AppDataSource } from "./config";
 
-connect().then(() => {
+AppDataSource.initialize().then(() => {
   const app = express();
 
   app.use(express.json());

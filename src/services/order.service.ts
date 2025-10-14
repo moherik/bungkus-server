@@ -1,17 +1,20 @@
-import { classToPlain, plainToClass } from "class-transformer";
-import { getRepository } from "typeorm";
-import { CreateOrderPayload, OrderStatus } from "../dto";
-import { Cart, MenuItem, Order } from "../entities";
+import { classToPlain, instanceToPlain, plainToClass } from "class-transformer";
+
 import { MenuService } from "./menu.service";
 import { MerchantService } from "./merchant.service";
 import { UserService } from "./user.service";
 
-const repository = () => getRepository(Order);
+import { AppDataSource } from "../config";
+import { CreateOrderPayload, OrderStatus } from "../dto";
+import { Cart, MenuItem, Order } from "../entities";
+
 const userService = new UserService();
 const merchantService = new MerchantService();
 const menuService = new MenuService();
 
 export class OrderService {
+ repository = AppDataSource.getRepository(Order);
+ 
   async getMyOrderList({
     userId,
     status,
@@ -21,17 +24,17 @@ export class OrderService {
   }) {
     let orders: Order[];
     if (status) {
-      orders = await repository().find({
+      orders = await this.repository.find({
         where: { user: { id: userId }, status },
         relations: ["carts"],
       });
     } else {
-      orders = await repository().find({
+      orders = await this.repository.find({
         where: { user: { id: userId } },
         relations: ["carts"],
       });
     }
-    return classToPlain(orders);
+    return instanceToPlain(orders);
   }
 
   async getMerchantOrderList({
@@ -47,14 +50,14 @@ export class OrderService {
     console.log(merchant);
     let orders: Order[];
     if (status) {
-      orders = await repository().find({
+      orders = await this.repository.find({
         where: {
           merchant: { id: merchant.id },
           status,
         },
       });
     } else {
-      orders = await repository().find({
+      orders = await this.repository.find({
         where: {
           merchant: { id: merchant.id },
         },
@@ -79,13 +82,10 @@ export class OrderService {
       merchantId,
     });
     const order = plainToClass(Order, payload);
-    const carts = payload.carts.map((cart) => {
-      let item: MenuItem | undefined;
-      menuService
-        .getMenuItemById({
-          menuItemId: Number(cart.menuItemId),
-        })
-        .then((_item) => (item = _item));
+    const carts = payload.carts.map(async (cart) => {
+      const item = await menuService.getMenuItemById({
+        menuItemId: Number(cart.menuItemId),
+      });
 
       const _cart = plainToClass(Cart, cart);
       if (item) {
@@ -96,8 +96,11 @@ export class OrderService {
 
     order.user = user;
     order.merchant = merchant;
-    order.carts = carts;
-    return repository().save(order);
+
+    Promise.all(carts).then((carts) => {
+      order.carts = carts;
+    });
+    return this.repository.save(order);
   }
 
   async updateStatus({
@@ -115,11 +118,15 @@ export class OrderService {
       merchantId,
       userId,
     });
-    const order = await repository().findOneOrFail({
-      id: orderId,
-      merchant: { id: merchant.id },
+
+    const order = await this.repository.findOneOrFail({
+      where: {
+        id: orderId,
+        merchant: { id: merchant.id },
+      },
     });
+
     order.status = status;
-    return repository().save(order);
+    return this.repository.save(order);
   }
 }

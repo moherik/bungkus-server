@@ -1,10 +1,13 @@
-import { getRepository, In } from "typeorm";
+import { In } from "typeorm";
+
+import { AppDataSource } from "../config/db.config";
 import { Merchant, User } from "../entities";
 
-const repository = () => getRepository(User);
-const merchantRepo = () => getRepository(Merchant);
-
 export class UserService {
+  repository = AppDataSource.getRepository(User);
+  merchantRepo = AppDataSource.getRepository(Merchant);
+
+
   async getById({
     userId,
     targetUserId,
@@ -12,8 +15,8 @@ export class UserService {
     userId: number;
     targetUserId: number;
   }) {
-    await repository().findOneOrFail({ id: userId });
-    return repository()
+    await this.repository.findOneOrFail({ where: { id: userId } });
+    return this.repository
       .createQueryBuilder("user")
       .loadRelationCountAndMap("user.totalFollowing", "user.following")
       .loadRelationCountAndMap("user.totalFollowers", "user.followers")
@@ -22,11 +25,11 @@ export class UserService {
   }
 
   async getByIdOrFail(id: number) {
-    return repository().findOneOrFail({ id });
+    return this.repository.findOneOrFail({ where: { id } });
   }
 
   async me(userId: number) {
-    return repository()
+    return this.repository
       .createQueryBuilder("user")
       .loadRelationCountAndMap("user.totalFollowing", "user.following")
       .loadRelationCountAndMap("user.totalFollowers", "user.followers")
@@ -36,9 +39,9 @@ export class UserService {
   }
 
   async updateName({ userId, name }: { userId: number; name: string }) {
-    const user = await repository().findOneOrFail({ id: userId });
+    const user = await this.repository.findOneOrFail({ where: { id: userId } });
     user.name = name;
-    return repository().save(user);
+    return this.repository.save(user);
   }
 
   async updateAvatar({
@@ -48,9 +51,9 @@ export class UserService {
     userId: number;
     imageUrl: string;
   }) {
-    const user = await repository().findOneOrFail({ id: userId });
+    const user = await this.repository.findOneOrFail({ where: { id: userId } });
     user.avatarUrl = imageUrl;
-    return repository().save(user);
+    return this.repository.save(user);
   }
 
   async followUser({
@@ -60,13 +63,15 @@ export class UserService {
     userId: number;
     followUserId: number;
   }) {
-    const user = await repository().findOneOrFail({
+    const user = await this.repository.findOneOrFail({
       where: { id: userId },
       relations: ["following", "followers"],
     });
-    const followUser = await repository().findOneOrFail({ id: followUserId });
+    const followUser = await this.repository.findOneOrFail({
+      where: { id: followUserId },
+    });
 
-    const isFollowing = await repository()
+    const isFollowing = await this.repository
       .createQueryBuilder("user")
       .leftJoin("user.following", "f")
       .where("user.id = :userId", { userId })
@@ -81,17 +86,17 @@ export class UserService {
       );
     }
 
-    await repository().save(user);
+    await this.repository.save(user);
   }
 
   async favorites({ userId }: { userId: number }) {
-    const user = await repository()
+    const user = await this.repository
       .createQueryBuilder("user")
       .loadAllRelationIds({ relations: ["favorites"] })
       .where("user.id = :userId", { userId })
       .getOneOrFail();
 
-    return merchantRepo().find({ where: { id: In(user.favorites) } });
+    return this.merchantRepo.find({ where: { id: In(user.favorites) } });
   }
 
   async addToFavorite({
@@ -101,12 +106,15 @@ export class UserService {
     userId: number;
     merchantId: number;
   }) {
-    const user = await repository().findOneOrFail(userId, {
+    const user = await this.repository.findOneOrFail({
+      where: { id: userId },
       relations: ["favorites"],
     });
-    const merchant = await merchantRepo().findOneOrFail(merchantId);
+    const merchant = await this.merchantRepo.findOneOrFail({
+      where: { id: merchantId },
+    });
 
-    const isFav = await repository()
+    const isFav = await this.repository
       .createQueryBuilder("user")
       .leftJoin("user.favorites", "fav")
       .where("user.id = :userId", { userId })
@@ -118,6 +126,6 @@ export class UserService {
     } else {
       user.favorites = user.favorites.filter((fav) => fav.id !== merchantId);
     }
-    await repository().save(user);
+    await this.repository.save(user);
   }
 }

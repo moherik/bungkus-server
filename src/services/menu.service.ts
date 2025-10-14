@@ -1,5 +1,8 @@
 import { classToPlain, plainToClass } from "class-transformer";
-import { getRepository } from "typeorm";
+
+import { MerchantService } from "./merchant.service";
+
+import { AppDataSource } from "../config/db.config";
 import {
   CreateMenuItemPayload,
   CreateMenuPayload,
@@ -8,16 +11,15 @@ import {
 } from "../dto";
 import { ReorderPayload } from "../dto/menu.dto";
 import { Menu, MenuItem } from "../entities";
-import { MerchantService } from "./merchant.service";
-
-const menuRepo = () => getRepository(Menu);
-const menuItemRepo = () => getRepository(MenuItem);
 
 const merchantService = new MerchantService();
 
 export class MenuService {
+  menuRepo = AppDataSource.getRepository(Menu);
+  menuItemRepo = AppDataSource.getRepository(MenuItem);
+
   async getAllMenu(merchantId: number) {
-    const menus = await menuRepo().find({
+    const menus = await this.menuRepo.find({
       where: { merchant: { id: merchantId } },
       relations: ["items"],
       order: { order: "ASC" },
@@ -32,10 +34,11 @@ export class MenuService {
     menuId: number;
     plain?: boolean;
   }) {
-    const menu = await menuRepo().findOne(
-      { id: menuId },
-      { relations: ["items"], order: { order: "ASC" } }
-    );
+    const menu = await this.menuRepo.findOne({
+      where: { id: menuId },
+      relations: ["items"],
+      order: { order: "ASC" },
+    });
     if (plain) {
       return classToPlain(menu);
     }
@@ -48,7 +51,7 @@ export class MenuService {
     menuItemId: number;
     plain?: boolean;
   }) {
-    return menuItemRepo().findOne({ id: menuItemId });
+    return this.menuItemRepo.findOne({ where: { id: menuItemId } });
   }
 
   async createMenu({
@@ -66,7 +69,7 @@ export class MenuService {
     });
     const menu = plainToClass(Menu, payload);
     menu.merchant = merchant;
-    return menuRepo().save(menu);
+    return this.menuRepo.save(menu);
   }
 
   async createMenuItem({
@@ -84,13 +87,12 @@ export class MenuService {
       userId,
       merchantId,
     });
-    const menu = await menuRepo().findOneOrFail({
-      id: menuId,
-      merchant: { id: merchantId },
+    const menu = await this.menuRepo.findOneOrFail({
+      where: { id: menuId, merchant: { id: merchantId } },
     });
     const menuItem = plainToClass(MenuItem, payload);
     menuItem.menu = menu;
-    return menuItemRepo().save(menuItem);
+    return this.menuItemRepo.save(menuItem);
   }
 
   async updateMenu({
@@ -111,7 +113,7 @@ export class MenuService {
     const menu = plainToClass(Menu, payload);
     menu.id = menuId;
     menu.merchant = merchant;
-    return menuRepo().save(menu);
+    return this.menuRepo.save(menu);
   }
 
   async reorderMenu({
@@ -130,9 +132,9 @@ export class MenuService {
       merchantId,
     });
     if (type === "menu") {
-      return menuRepo().save(payload);
+      return this.menuRepo.save(payload);
     } else if (type === "item") {
-      return menuItemRepo().save(payload);
+      return this.menuItemRepo.save(payload);
     }
   }
 
@@ -153,15 +155,18 @@ export class MenuService {
       userId,
       merchantId,
     });
-    const menu = await menuRepo().findOneOrFail({
-      id: menuId,
-      merchant: { id: merchantId },
+
+    const menu = await this.menuRepo.findOneOrFail({
+      where: {
+        id: menuId,
+        merchant: { id: merchantId },
+      },
     });
 
     const menuItem = plainToClass(MenuItem, payload);
     menuItem.menu = menu;
     menuItem.id = menuItemId;
-    return menuItemRepo().save(menuItem);
+    return this.menuItemRepo.save(menuItem);
   }
 
   async reorderMenuItem({
@@ -177,7 +182,8 @@ export class MenuService {
       userId,
       merchantId,
     });
-    return menuItemRepo().save(payload);
+
+    return this.menuItemRepo.save(payload);
   }
 
   async deleteMenu({
@@ -193,11 +199,15 @@ export class MenuService {
       userId,
       merchantId,
     });
-    await menuRepo().findOneOrFail({
-      id: menuId,
-      merchant: { id: merchantId },
+
+    await this.menuRepo.findOneOrFail({
+      where: {
+        id: menuId,
+        merchant: { id: merchantId },
+      },
     });
-    return menuRepo().delete({
+
+    return this.menuRepo.delete({
       id: menuId,
       merchant: { id: merchantId },
     });
@@ -218,11 +228,15 @@ export class MenuService {
       userId,
       merchantId,
     });
-    await menuItemRepo().findOneOrFail({
-      id: menuItemId,
-      menu: { id: menuId, merchant: { id: merchantId } },
+
+    await this.menuItemRepo.findOneOrFail({
+      where: {
+        id: menuItemId,
+        menu: { id: menuId, merchant: { id: merchantId } },
+      },
     });
-    return menuItemRepo().delete({
+
+    return this.menuItemRepo.delete({
       id: menuItemId,
       menu: { id: menuId, merchant: { id: merchantId } },
     });

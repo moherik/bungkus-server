@@ -1,12 +1,15 @@
-import { classToPlain, plainToClass } from "class-transformer";
-import { getRepository, Not, SelectQueryBuilder } from "typeorm";
+import { instanceToPlain, plainToClass } from "class-transformer";
+import { Not } from "typeorm";
+
+import { UserService } from "./user.service";
+
+import { AppDataSource } from "../config/db.config";
 import { CreateMerchantPayload, UpdateMerchantPayload } from "../dto";
 import { GetMerchantParams } from "../dto/merchant.dto";
 import { Merchant, MerchantCategory } from "../entities";
-import { UserService } from "./user.service";
 
-const merchantRepo = () => getRepository(Merchant);
-const categoryRepo = () => getRepository(MerchantCategory);
+const merchantRepo = () => AppDataSource.getRepository(Merchant);
+const categoryRepo = () => AppDataSource.getRepository(MerchantCategory);
 const userService = new UserService();
 
 export class MerchantService {
@@ -72,7 +75,7 @@ export class MerchantService {
         .getManyAndCount();
     }
 
-    const merchants = classToPlain(results[0]);
+    const merchants = instanceToPlain(results[0]);
     return {
       data: merchants,
       totalCount: results[1],
@@ -80,12 +83,12 @@ export class MerchantService {
   }
 
   async getById(id: number) {
-    const merchant = await merchantRepo().findOne({ id });
-    return classToPlain(merchant);
+    const merchant = await merchantRepo().findOne({ where: { id } });
+    return instanceToPlain(merchant);
   }
 
   async getByIdOrFail(id: number) {
-    return merchantRepo().findOneOrFail({ id });
+    return merchantRepo().findOneOrFail({ where: { id } });
   }
 
   async getNotOwnMerchant({
@@ -96,8 +99,10 @@ export class MerchantService {
     merchantId: number;
   }) {
     return merchantRepo().findOneOrFail({
-      id: merchantId,
-      user: { id: Not(userId) },
+      where: {
+        id: merchantId,
+        user: { id: Not(userId) },
+      },
     });
   }
 
@@ -109,8 +114,10 @@ export class MerchantService {
     userId: number;
   }) {
     return merchantRepo().findOneOrFail({
-      id: merchantId,
-      user: { id: userId },
+      where: {
+        id: merchantId,
+        user: { id: userId },
+      },
     });
   }
 
@@ -140,8 +147,10 @@ export class MerchantService {
   }) {
     const merchant = plainToClass(Merchant, payload);
     const _merchant = await merchantRepo().findOneOrFail({
-      id: merchantId,
-      user: { id: userId },
+      where: {
+        id: merchantId,
+        user: { id: userId },
+      },
     });
     merchant.id = _merchant.id;
     if (payload.categoryIds && payload.categoryIds.length > 0) {
@@ -153,8 +162,10 @@ export class MerchantService {
 
   async delete({ userId, merchantId }: { userId: number; merchantId: number }) {
     const merchant = await merchantRepo().findOneOrFail({
-      id: merchantId,
-      user: { id: userId },
+      where: {
+        id: merchantId,
+        user: { id: userId },
+      },
     });
     if (merchant) return merchantRepo().delete({ id: merchantId });
   }
